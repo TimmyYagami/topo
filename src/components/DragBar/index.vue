@@ -38,7 +38,24 @@
 
   export default defineComponent({
     name: 'Index',
-    props: {},
+    props: {
+      dragBar: {
+        type: Array,
+        required: true,
+        default: () => [
+          {
+            title: '虚拟设备',
+            menu: [
+              {
+                type: 'router',
+                img: 'router',
+                name: '路由器',
+              },
+            ],
+          },
+        ],
+      },
+    },
     setup: () => {
       const handleOpen = (key, keyPath) => {
         console.log(key, keyPath);
