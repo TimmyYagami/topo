@@ -6,10 +6,12 @@ interface Menu {
   img: string;
   // 节点名称
   name: string;
+  // 可选，多级菜单
+  menu?: Menu[];
 }
 // 菜单的数据格式
 interface Submenu {
-  title: string;
+  name: string;
   menu: Menu[];
 }
 export interface DragBarSetting {

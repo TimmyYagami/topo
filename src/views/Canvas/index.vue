@@ -1,5 +1,5 @@
 <template>
-  <DragBar :dragBar="dragBar" />
+  <DragBar v-if="dragBar.show_bar" :dragBar="dragBar.submenu" />
   <div id="container"></div>
 </template>
 
@@ -20,12 +20,40 @@
         show_bar: true,
         submenu: [
           {
-            title: '虚拟设备',
+            name: '虚拟设备',
+            type: 'virtual',
             menu: [
               {
                 type: 'router',
-                img: 'router',
+                icon: '/src/icon/rotuer.svg',
                 name: '路由器',
+              },
+              {
+                type: 'firewall',
+                icon: '/src/icon/firewall.svg',
+                name: '防火墙',
+              },
+            ],
+          },
+          {
+            name: '实体设备',
+            type: 'entity',
+            menu: [
+              {
+                type: 'net',
+                icon: '/src/icon/switch.svg',
+                name: '交换机',
+              },
+            ],
+          },
+          {
+            name: '因特网',
+            type: 'internet',
+            menu: [
+              {
+                type: 'net',
+                icon: '/src/icon/net.svg',
+                name: '网络',
               },
             ],
           },
