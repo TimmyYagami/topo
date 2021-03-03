@@ -11,8 +11,8 @@ export default defineComponent({
   },
 
   setup(props) {
-    const dragendhandler = (e) => {
-      console.log(e);
+    const dragstarthandler = (e) => {
+      e.dataTransfer.setData('type', props.menu.type);
     };
     return () =>
       h(
@@ -21,7 +21,7 @@ export default defineComponent({
           ref: 'dragItem',
           class: 'bar_box',
           draggable: true,
-          ondragend: dragendhandler,
+          ondragstart: dragstarthandler,
         },
         [
           h('img', {
