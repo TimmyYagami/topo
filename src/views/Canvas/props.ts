@@ -44,7 +44,7 @@ export const basicProps = {
           type: 'entity',
           menu: [
             {
-              type: 'net',
+              type: 'switch',
               icon: '/src/icon/switch.svg',
               name: '交换机',
             },

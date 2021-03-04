@@ -62,7 +62,7 @@
           type: 'entity',
           menu: [
             {
-              type: 'net',
+              type: 'switch',
               icon: '/src/icon/switch.svg',
               name: '交换机',
             },
@@ -79,8 +79,19 @@
             },
           ],
         },
+        {
+          type: 'noMenu',
+          icon: '/src/icon/net.svg',
+          name: '自成一类',
+        },
+        {
+          type: 'nolength',
+          icon: '/src/icon/net.svg',
+          name: '没得长度',
+          menu: [],
+        },
       ];
-      const size = 60;
+      const size = 40;
       return { topoData, showBar, submenu, size };
     },
   });

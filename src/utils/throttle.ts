@@ -10,6 +10,7 @@ export function throttle(fn, delay = 200) {
     }, delay);
   };
 }
+
 // export function useThrottle(fn, interval = 500) {
 //   console.log(arguments);
 //   let run = true;

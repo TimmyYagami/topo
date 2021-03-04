@@ -47,6 +47,7 @@
 </script>
 <style lang="scss">
   .drag-bar-menu {
+    .el-menu-item,
     .el-menu .el-menu-item {
       height: auto;
       line-height: 30px;

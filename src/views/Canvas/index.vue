@@ -7,8 +7,8 @@
   import { defineComponent, onMounted } from 'vue';
   import DragBar from '@/components/DragBar/index.vue';
 
-  import { throttle } from '@/utils/throttle';
   import { initGraph } from '@/hooks/useGraph';
+  import { useParseData } from '@/hooks/useParseData';
   import { basicProps } from './props';
 
   export default defineComponent({
@@ -22,20 +22,26 @@
       let container: HTMLElement | null;
       // 画布实例
       let graph;
-      let viewLeft, viewTop;
+      let mapTopo = new Map();
+
+      onMounted(() => {
+        container = document.getElementById('container');
+        getData();
+      });
+
+      /*
+       * G6事件
+       * */
+
       // 获取数据
       const getData = () => {
+        useParseData(props.submenu, mapTopo);
         createGraph(props.topoData);
       };
       // 生成画布
       const createGraph = (data) => {
-        // 初始化画布配置
-        container = document.getElementById('container');
-        viewTop = container.getBoundingClientRect().top;
-        viewLeft = container.getBoundingClientRect().left;
-
         // 渲染画布
-        graph = initGraph(props.size);
+        graph = initGraph(container, props.size);
         graph.data(data);
         graph.render();
 
@@ -64,46 +70,14 @@
 
         // 监听画布拖拽事件
         graph.on('dragstart', canDragStart);
-        graph.on('dragend', canDragEnd);
-        graph.on('wheel', canWheel);
       };
       /*
        * g6的监听事件
        * */
-      let canvasOffset = {
-        x: 0,
-        y: 0,
-        nx: 0,
-        ny: 0,
-      };
-      const canDragStart = (e) => {
-        canvasOffset.x = e.clientX;
-        canvasOffset.y = e.clientY;
-        console.log(canvasOffset);
-      };
-      const canDragEnd = (e) => {
-        canvasOffset.nx = canvasOffset.nx + e.clientX - canvasOffset.x;
-        canvasOffset.ny = canvasOffset.ny + e.clientY - canvasOffset.y;
-        console.log(canvasOffset);
-      };
-      const canWheel = (e) => {
-        console.log(e);
-        canvasOffset.nx = canvasOffset.nx + e.clientX - canvasOffset.x;
-        canvasOffset.ny = canvasOffset.ny + e.clientY - canvasOffset.y;
-        console.log(canvasOffset);
-      };
 
-      /*
-       * window上的事件
-       * */
-      function handlerScroll() {
-        viewTop = container.getBoundingClientRect().top;
-        viewLeft = container.getBoundingClientRect().left;
-      }
-      onMounted(() => {
-        window.onscroll = throttle(handlerScroll, 500);
-        getData();
-      });
+      const canDragStart = (e) => {
+        console.log(e);
+      };
 
       /*
        * vue上的事件
@@ -114,10 +88,18 @@
       };
       // 在容器松开鼠标事件
       const dropHandler = (e) => {
-        graph.addItem('node', {
-          x: e.x - canvasOffset.nx - viewLeft,
-          y: e.y - canvasOffset.ny - viewTop,
-        });
+        let type = e.dataTransfer.getData('type');
+        let { x, y } = graph.getPointByClient(e.x, e.y);
+        let model = {
+          id: type,
+          // style: '',
+          // type: 'image',
+          // img: mapTopo.get(type).icon,
+          label: mapTopo.get(type).name,
+          x,
+          y,
+        };
+        graph.addItem('node', model);
       };
       return {
         dropHandler,
