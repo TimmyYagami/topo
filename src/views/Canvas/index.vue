@@ -7,6 +7,8 @@
   import { defineComponent, onMounted } from 'vue';
   import DragBar from '@/components/DragBar/index.vue';
 
+  import { buildUUID } from '@/utils/uuid';
+
   import { initGraph } from '@/hooks/useGraph';
   import { useParseData } from '@/hooks/useParseData';
   import { basicProps } from './props';
@@ -42,6 +44,7 @@
       const createGraph = (data) => {
         // 渲染画布
         graph = initGraph(container, props.size);
+
         graph.data(data);
         graph.render();
 
@@ -91,10 +94,10 @@
         let type = e.dataTransfer.getData('type');
         let { x, y } = graph.getPointByClient(e.x, e.y);
         let model = {
-          id: type,
-          // style: '',
-          // type: 'image',
-          // img: mapTopo.get(type).icon,
+          id: buildUUID(),
+          style: '',
+          type: 'image',
+          img: mapTopo.get(type).icon,
           label: mapTopo.get(type).name,
           x,
           y,

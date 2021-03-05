@@ -1,5 +1,9 @@
 import G6 from '@antv/g6';
 
+export function registerNode() {
+  // G6.registerNode('dia');
+}
+
 export function initGraph(container, size) {
   // 创建 G6 图实例
   return new G6.Graph({
@@ -27,14 +31,25 @@ export function initGraph(container, size) {
     defaultNode: {
       // type: 'image',
       size: size, // 节点大小
-
       // 节点上的标签文本配置
       labelCfg: {
         // 节点上的标签文本样式配置
         offset: 10,
+        position: 'bottom',
         style: {
           fill: '#000', // 节点标签文字颜色
         },
+      },
+      style: {
+        cursor: 'pointer',
+        stroke: '#000',
+        lineWidth: 2,
+        // lineDash: [5, 5],
+        // fill: '#000',
+        shadowOffsetX: 0,
+        shadowOffsetY: 0,
+        shadowColor: '#000000',
+        shadowBlur: 50,
       },
     },
     // 边在默认状态下的样式配置（style）和其他配置
@@ -54,8 +69,7 @@ export function initGraph(container, size) {
     nodeStateStyles: {
       // 鼠标点击节点，即 click 状态为 true 时的样式
       click: {
-        stroke: '#000',
-        lineWidth: 3,
+        fill: '#000',
       },
     },
 
