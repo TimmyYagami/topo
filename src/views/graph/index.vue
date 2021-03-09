@@ -5,13 +5,19 @@
 
 <script lang="ts">
   import { defineComponent, onMounted } from 'vue';
+  import G6 from '@antv/g6';
   import DragBar from '@/components/DragBar/index.vue';
+
+  // 格式化props
+  import { basicProps } from './props';
 
   import { buildUUID } from '@/utils/uuid';
 
-  import { initGraph } from '@/hooks/useGraph';
-  import { useParseData } from '@/hooks/useParseData';
-  import { basicProps } from './props';
+  // g6数据处理方法
+  import { useParseData } from '@/views/graph/hooks/useParseData';
+  import { useCreateMenu } from '@/views/graph/hooks/useCreateMenu';
+  import { useGetOptions } from '@/views/graph/hooks/useGetOptions';
+  import useRegister from '@/views/graph/hooks/useRegister';
 
   export default defineComponent({
     name: 'Index',
@@ -24,7 +30,10 @@
       let container: HTMLElement | null;
       // 画布实例
       let graph;
+      // 拓扑数据映射，本质是一个对象
       let mapTopo = new Map();
+      // 临时group，在点击节点时生成一个临时group，用来展示点击节点的描边。
+      let tempGroup;
 
       onMounted(() => {
         container = document.getElementById('container');
@@ -42,49 +51,59 @@
       };
       // 生成画布
       const createGraph = (data) => {
-        // 渲染画布
-        graph = initGraph(container, props.size);
+        useRegister(G6);
+        const contextMenu = useCreateMenu(G6, container, graph);
+        const options = useGetOptions(container, props.size, [contextMenu]);
+        graph = new G6.Graph(options);
 
         graph.data(data);
         graph.render();
 
-        // 鼠标进入节点
-        graph.on('node:mouseenter', (e) => {
-          const nodeItem = e.item; // 获取鼠标进入的节点元素对象
-          graph.setItemState(nodeItem, 'hover', true); // 设置当前节点的 hover 状态为 true
-        });
-
-        // 鼠标离开节点
-        graph.on('node:mouseleave', (e) => {
-          const nodeItem = e.item; // 获取鼠标离开的节点元素对象
-          graph.setItemState(nodeItem, 'hover', false); // 设置当前节点的 hover 状态为 false
-        });
-
-        // 点击节点
+        // 点击节点，增加选中状态
         graph.on('node:click', (e) => {
-          // 先将所有当前是 click 状态的节点置为非 click 状态
-          const clickNodes = graph.findAllByState('node', 'click');
-          clickNodes.forEach((cn) => {
-            graph.setItemState(cn, 'click', false);
-          });
           const nodeItem = e.item; // 获取被点击的节点元素对象
-          graph.setItemState(nodeItem, 'click', true); // 设置当前节点的 click 状态为 true
+          const group = nodeItem.get('group');
+          group.addShape('circle', {
+            attrs: {
+              id: 'temp',
+              x: 0,
+              y: 0,
+              r: props.size / 2 + 10,
+              fill: '',
+              stroke: '#07daff',
+              lineWidth: 3,
+            },
+            name: 'rect-shape',
+            zIndex: 10,
+          });
+          removeTempNode();
+          tempGroup = group;
         });
 
-        // 监听画布拖拽事件
-        graph.on('dragstart', canDragStart);
+        // 点击graph
+        graph.on('click', () => {
+          removeTempNode();
+        });
       };
       /*
        * g6的监听事件
        * */
-
-      const canDragStart = (e) => {
-        console.log(e);
+      // 删除临时节点
+      const removeTempNode = () => {
+        if (tempGroup) {
+          // 删除上一个生成的 临时shape
+          const child = tempGroup.find(function (item) {
+            return item.attr('id') === 'temp';
+          });
+          tempGroup.removeChild(child);
+          tempGroup = null;
+        }
       };
 
       /*
        * vue上的事件
        * */
+
       // 拖拽进入容器事件，不加此事件无法触发drop事件
       const dragoverHandler = (e) => {
         e.preventDefault();
@@ -92,13 +111,15 @@
       // 在容器松开鼠标事件
       const dropHandler = (e) => {
         let type = e.dataTransfer.getData('type');
+        let fullName = mapTopo.get(type).name;
         let { x, y } = graph.getPointByClient(e.x, e.y);
         let model = {
           id: buildUUID(),
           style: '',
           type: 'image',
           img: mapTopo.get(type).icon,
-          label: mapTopo.get(type).name,
+          fullName: fullName,
+          label: fullName.length > 8 ? fullName.slice(0, 8) + '...' : fullName,
           x,
           y,
         };
@@ -126,5 +147,17 @@
     background-color: rgba(255, 255, 255, 0.9);
     padding: 10px 8px;
     box-shadow: rgb(174, 174, 174) 0px 0px 10px;
+  }
+  .g6-component-contextmenu {
+    padding: 0;
+  }
+  .g6-component-contextmenu p {
+    padding: 10px;
+    cursor: pointer;
+    margin: 0;
+    text-align: center;
+  }
+  .g6-component-contextmenu p:hover {
+    background: #44d9ae;
   }
 </style>

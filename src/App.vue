@@ -1,16 +1,16 @@
 <template>
-  <Canvas :topoData="topoData" :showBar="showBar" :submenu="submenu" :size="size" />
+  <graph :topoData="topoData" :showBar="showBar" :submenu="submenu" :size="size" />
 </template>
 
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import Canvas from '@/views/Canvas/index.vue';
+  import graph from '@/views/graph/index.vue';
   import { DragBarSetting } from '@/types/DragBar';
 
   export default defineComponent({
     name: 'App',
     components: {
-      Canvas,
+      graph,
     },
     setup: () => {
       // 拖拽栏数据
