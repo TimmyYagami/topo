@@ -1,73 +1,97 @@
+import anchorEvent from './anchor-event';
+
 export default (G6) => {
-  G6.registerNode('base-node', {
-    // 添加文本节点
-    drawText(cfg, group) {
-      group.addShape('text', {
-        attrs: {
-          text: cfg.label,
-          fill: '#fff',
-          fontSize: 14,
-          textAlign: 'center',
-          textBaseline: 'middle',
-          ...cfg.labelCfg.style,
-        },
-        className: 'node-text',
-        draggable: true,
-      });
-    },
-    drawAnchor(cfg, group) {
-      const item = group.get('children')[0];
-      const bBox = item.getBBox();
-      const anchors = this.getAnchorPoints(cfg);
-
-      // 绘制锚点坐标
-      anchors &&
-        anchors.forEach((p, i) => {
-          const x = bBox.width * (p[0] - 0.5);
-          const y = bBox.height * (p[1] - 0.5);
-
-          // 视觉锚点
-          group.addShape('circle', {
-            attrs: {
-              x,
-              y,
-              fill: '#e7e7e7',
-              stroke: '#1890ff',
-              lineWidth: 1,
-              r: 5,
-            },
-            zIndex: 1,
-            nodeId: group.get('id'),
-            className: 'node-anchor',
-            draggable: true,
-            isAnchor: true,
-            index: i,
-          });
-        });
-    },
-    draw(cfg, group) {
-      console.log(cfg);
-      const attrs = cfg;
-      const shape = group.addShape(
-        'rect', // 继承内置节点的 shape, 可选 rect, circle, ellipse, path 等
-        {
-          // 所有的样式配置
+  G6.registerNode(
+    'base-node',
+    {
+      // 初始化锚点方法，绘制锚点
+      initAnchor(cfg, group) {
+        group.anchorShapes = [];
+        group.showAnchor = (group) => {
+          this.drawAnchor(cfg, group);
+        };
+        group.clearAnchor = (group) => {
+          group.anchorShapes && group.anchorShapes.forEach((a) => a.remove());
+          group.anchorShapes = [];
+        };
+      },
+      // 绘制锚点
+      drawAnchor(cfg, group) {
+        const size = cfg.size;
+        const x = (size - 20) / 2;
+        const y = -(size - 20) / 2;
+        // 添加拖拽连线标识
+        const anchor = group.addShape('image', {
           attrs: {
-            ...attrs,
-            fill: '#1890ff',
-            ...attrs.style,
-            x: -attrs.style.width / 2,
-            y: -attrs.style.height / 2,
+            x,
+            y,
+            width: 20,
+            height: 20,
+            img: '/src/icon/drag.svg',
+            cursor: 'crosshair',
+            banDrag: true,
           },
-          className: 'custom-shape', // 添加自定义属性, 方便以后对节点进行查找更新等
-          draggable: true, // 允许自定义图形使用拖拽事件
+          // must be assigned in G6 3.3 and later versions. it can be any value you want
+          name: 'image-shape',
+          draggable: true,
+        });
+
+        anchorEvent(anchor, group);
+
+        group.anchorShapes.push(anchor);
+      },
+      // 绘制完继承的节点后会触发此方法
+      afterDraw(cfg, group) {
+        const size = cfg.size;
+        const width = size - 20;
+        const height = size - 20;
+        // 添加图片
+        group.addShape('image', {
+          attrs: {
+            x: -width / 2,
+            y: -height / 2,
+            width,
+            height,
+            img: cfg.img,
+          },
+          // must be assigned in G6 3.3 and later versions. it can be any value you want
+          name: 'image-shape',
+          draggable: true,
+        });
+
+        // 按className查找元素
+        group.getItem = (className) => {
+          return group.get('children').find((item) => item.get('className') === className);
+        };
+        this.initAnchor(cfg, group);
+      },
+      setState(name, value, item) {
+        // 定义全部修改状态的事件
+        const buildInEvents = [
+          'anchorShow',
+          'nodeState:hover',
+          'nodeOnDragStart',
+          'nodeOnDrag',
+          'nodeOnDragEnd',
+        ];
+        console.log(name, value, item, buildInEvents.includes(name));
+        const group = item.getContainer();
+        if (buildInEvents.includes(name)) {
+          if (value) {
+            group.showAnchor(group);
+          } else {
+            group.clearAnchor(group);
+          }
+        } else if (this.stateApplying) {
+          this.stateApplying.call(this, name, value, item);
+        } else {
+          console.warn(
+            `warning: ${name} 事件回调未注册!\n可继承该节点并通过 stateApplying 方法进行注册\n如已注册请忽略 (-_-!)`
+          );
         }
-      );
-
-      this.drawText(cfg, group);
-      this.drawAnchor(cfg, group);
-
-      return shape;
+      },
     },
-  });
+    // 继承了 rect 节点
+    'circle'
+  );
 };

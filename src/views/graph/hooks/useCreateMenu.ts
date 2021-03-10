@@ -12,16 +12,11 @@ export function useCreateMenu(G6, container, graph) {
       `;
     },
     handleMenuClick: (target, item) => {
+      console.log(target);
       graph.removeItem(item);
-      console.log(target, item);
     },
-    // offsetX and offsetY include the padding of the parent container
-    // 需要加上父级容器的 padding-left 16 与自身偏移量 10
     offsetX: -left + 20,
-    // 需要加上父级容器的 padding-top 24 、画布兄弟元素高度、与自身偏移量 10
     offsetY: -top + 20,
-    // the types of items that allow the menu show up
-    // 在哪些类型的元素上响应
     itemTypes: ['node', 'edge'],
   });
 }

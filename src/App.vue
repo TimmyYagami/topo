@@ -91,7 +91,7 @@
           menu: [],
         },
       ];
-      const size = 40;
+      const size = 60;
       return { topoData, showBar, submenu, size };
     },
   });

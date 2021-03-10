@@ -32,8 +32,6 @@
       let graph;
       // 拓扑数据映射，本质是一个对象
       let mapTopo = new Map();
-      // 临时group，在点击节点时生成一个临时group，用来展示点击节点的描边。
-      let tempGroup;
 
       onMounted(() => {
         container = document.getElementById('container');
@@ -52,52 +50,31 @@
       // 生成画布
       const createGraph = (data) => {
         useRegister(G6);
-        const contextMenu = useCreateMenu(G6, container, graph);
+        const { left, top } = container.getBoundingClientRect();
+
+        const contextMenu = new G6.Menu({
+          getContent(evt) {
+            const item = evt.item;
+            const type = item.getType() === 'node' ? '节点' : '连线';
+            console.log(evt, container);
+            return `
+              <p>删除${type}</p>
+              <p>删除${type}</p>
+            `;
+          },
+          handleMenuClick: (target, item) => {
+            graph.removeItem(item);
+          },
+          offsetX: -left + 20,
+          offsetY: -top + 20,
+          itemTypes: ['node', 'edge'],
+        });
+
         const options = useGetOptions(container, props.size, [contextMenu]);
         graph = new G6.Graph(options);
 
         graph.data(data);
         graph.render();
-
-        // 点击节点，增加选中状态
-        graph.on('node:click', (e) => {
-          const nodeItem = e.item; // 获取被点击的节点元素对象
-          const group = nodeItem.get('group');
-          group.addShape('circle', {
-            attrs: {
-              id: 'temp',
-              x: 0,
-              y: 0,
-              r: props.size / 2 + 10,
-              fill: '',
-              stroke: '#07daff',
-              lineWidth: 3,
-            },
-            name: 'rect-shape',
-            zIndex: 10,
-          });
-          removeTempNode();
-          tempGroup = group;
-        });
-
-        // 点击graph
-        graph.on('click', () => {
-          removeTempNode();
-        });
-      };
-      /*
-       * g6的监听事件
-       * */
-      // 删除临时节点
-      const removeTempNode = () => {
-        if (tempGroup) {
-          // 删除上一个生成的 临时shape
-          const child = tempGroup.find(function (item) {
-            return item.attr('id') === 'temp';
-          });
-          tempGroup.removeChild(child);
-          tempGroup = null;
-        }
       };
 
       /*
@@ -116,7 +93,7 @@
         let model = {
           id: buildUUID(),
           style: '',
-          type: 'image',
+          type: 'base-node',
           img: mapTopo.get(type).icon,
           fullName: fullName,
           label: fullName.length > 8 ? fullName.slice(0, 8) + '...' : fullName,
