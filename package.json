@@ -1,6 +1,13 @@
 {
-  "name": "no",
+  "name": "t-net-topo",
   "version": "0.0.0",
+  "description": "This is a VUE based network topology.",
+  "keywords": "vue,topo,new-topo",
+  "author": '',
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FEMessage/el-data-table.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",

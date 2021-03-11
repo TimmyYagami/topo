@@ -26,11 +26,10 @@ export default (G6) => {
     },
     onNodeClick(e) {
       this._clearSelected();
-      console.log(this);
       e.item.toFront();
       // 获取被点击的节点元素对象, 设置当前节点的 click 状态为 selected
-      e.item.setState('nodeState', 'selected');
-      // 将点击事件发送给 graph 实例
+      e.item.setState('nodeState:selected', true);
+      // 将点击事件发送给 graph 实例,
       this.graph.emit('after-node-selected', e);
     },
     // 清空已选
@@ -40,6 +39,33 @@ export default (G6) => {
       selectedNodes.forEach((node) => {
         node.clearStates(['nodeState:selected', 'nodeState:hover']);
       });
+    },
+  });
+
+  G6.registerBehavior('anchor-drag', {
+    // 这个方法会默认调用，可在下面方法中通过this获取返回的值
+    getDefaultCfg() {
+      return {
+        sourceNode: {},
+      };
+    },
+    getEvents() {
+      return {
+        'node:dragstart': 'onDragStart',
+        'node:drop': 'onDrop',
+      };
+    },
+    onDragStart(e) {
+      const node = e.item;
+      this.sourceNode = node;
+    },
+    onDrop(e) {
+      const node = e.item;
+      const m = {
+        source: this.sourceNode,
+        target: node,
+      };
+      this.graph.emit('before-edge-add', e, m);
     },
   });
 };

@@ -5,14 +5,12 @@ export function useCreateMenu(G6, container, graph) {
     getContent(evt) {
       const item = evt.item;
       const type = item.getType() === 'node' ? '节点' : '连线';
-      console.log(evt, container);
       return `
         <p>删除${type}</p>
         <p>删除${type}</p>
       `;
     },
     handleMenuClick: (target, item) => {
-      console.log(target);
       graph.removeItem(item);
     },
     offsetX: -left + 20,

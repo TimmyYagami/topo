@@ -31,17 +31,8 @@
         required: true,
       },
     },
-    setup: (props) => {
-      const handleOpen = (key, keyPath) => {
-        console.log(key, keyPath);
-      };
-      const handleClose = (key, keyPath) => {
-        console.log(key, keyPath);
-      };
-      return {
-        handleOpen,
-        handleClose,
-      };
+    setup: () => {
+      return {};
     },
   });
 </script>

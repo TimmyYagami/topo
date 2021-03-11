@@ -56,7 +56,6 @@
           getContent(evt) {
             const item = evt.item;
             const type = item.getType() === 'node' ? '节点' : '连线';
-            console.log(evt, container);
             return `
               <p>删除${type}</p>
               <p>删除${type}</p>
@@ -75,6 +74,61 @@
 
         graph.data(data);
         graph.render();
+
+        // 连线之前
+        graph.on('before-edge-add', (e, { source, target }) => {
+          const sId = source.getModel().id;
+          const tId = target.getModel().id;
+          const edges = source.getEdges();
+
+          let canLink = sId != tId;
+          //不能连接自己，不能连接两个已连接节点。
+          canLink = edges.length > 0 ? edges.some((l) => l.getModel().source !== tId) : canLink;
+          if (canLink) {
+            graph.addItem('edge', {
+              id: buildUUID(), // edge id
+              source: source,
+              target: target,
+            });
+          }
+        });
+        // 点击节点之后
+        graph.on('after-node-selected', (e) => {
+          const model = e.item.getModel();
+          console.log(model);
+        });
+
+        // 监听鼠标进入边事件
+        graph.on('edge:mouseenter', (evt) => {
+          const edge = evt.item;
+          // 激活该节点的 hover 状态
+          graph.setItemState(edge, 'hover', true);
+        });
+        // 监听鼠标离开边事件
+        graph.on('edge:mouseleave', (evt) => {
+          const edge = evt.item;
+          // 关闭该节点的 hover 状态
+          graph.setItemState(edge, 'hover', false);
+        });
+        // 监听边点击事件
+        graph.on('edge:click', (evt) => {
+          const edge = evt.item;
+          const source = edge.getSource();
+          const target = edge.getTarget();
+          clearSelected();
+          graph.setItemState(source, 'nodeState:selected', true);
+          graph.setItemState(target, 'nodeState:selected', true);
+        });
+        // 监听canvas点击事件
+        graph.on('canvas:click', clearSelected);
+      };
+
+      // 清除默认状态
+      const clearSelected = () => {
+        const selectedNodes = graph.findAllByState('node', 'nodeState:selected');
+        selectedNodes.forEach((node) => {
+          node.clearStates(['nodeState:selected', 'nodeState:hover']);
+        });
       };
 
       /*
@@ -100,7 +154,9 @@
           x,
           y,
         };
-        graph.addItem('node', model);
+        let node = graph.addItem('node', model);
+        clearSelected();
+        graph.setItemState(node, 'nodeState:selected', true);
       };
       return {
         dropHandler,

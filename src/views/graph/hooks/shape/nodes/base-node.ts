@@ -1,4 +1,5 @@
 import anchorEvent from './anchor-event';
+import nodeStateEvents from './node-state-events';
 
 export default (G6) => {
   G6.registerNode(
@@ -46,13 +47,14 @@ export default (G6) => {
         const width = size - 20;
         const height = size - 20;
         // 添加图片
-        group.addShape('image', {
+        const img = group.addShape('image', {
           attrs: {
             x: -width / 2,
             y: -height / 2,
             width,
             height,
             img: cfg.img,
+            cursor: 'pointer',
           },
           // must be assigned in G6 3.3 and later versions. it can be any value you want
           name: 'image-shape',
@@ -64,30 +66,21 @@ export default (G6) => {
           return group.get('children').find((item) => item.get('className') === className);
         };
         this.initAnchor(cfg, group);
+        return img;
       },
       setState(name, value, item) {
         // 定义全部修改状态的事件
         const buildInEvents = [
           'anchorShow',
           'nodeState:hover',
+          'nodeState:selected',
           'nodeOnDragStart',
           'nodeOnDrag',
           'nodeOnDragEnd',
         ];
-        console.log(name, value, item, buildInEvents.includes(name));
         const group = item.getContainer();
         if (buildInEvents.includes(name)) {
-          if (value) {
-            group.showAnchor(group);
-          } else {
-            group.clearAnchor(group);
-          }
-        } else if (this.stateApplying) {
-          this.stateApplying.call(this, name, value, item);
-        } else {
-          console.warn(
-            `warning: ${name} 事件回调未注册!\n可继承该节点并通过 stateApplying 方法进行注册\n如已注册请忽略 (-_-!)`
-          );
+          nodeStateEvents[name].call(this, value, group);
         }
       },
     },

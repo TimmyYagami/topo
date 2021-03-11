@@ -26,6 +26,7 @@ export function useGetOptions(container: any, size, plugins) {
 
         'node-hover',
         'node-select',
+        'anchor-drag',
       ], // 允许拖拽画布、放缩画布、拖拽节点
     },
     // 节点在默认状态下的样式配置（style）和其他配置
@@ -42,6 +43,9 @@ export function useGetOptions(container: any, size, plugins) {
       },
     },
     nodeStateStyles: {
+      'nodeState:default': {
+        stroke: '',
+      },
       // 鼠标 hover 上节点，即 hover 状态为 true 时的样式
       'nodeState:hover': {
         stroke: 'lightsteelblue',
@@ -55,7 +59,13 @@ export function useGetOptions(container: any, size, plugins) {
     defaultEdge: {
       style: {
         stroke: 'grey', // 边描边颜色
-        lineWidth: 2,
+        lineWidth: 3,
+        cursor: 'pointer',
+      },
+    },
+    edgeStateStyles: {
+      hover: {
+        stroke: 'lightsteelblue',
       },
     },
   };
