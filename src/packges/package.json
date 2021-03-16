@@ -1,10 +1,10 @@
 {
-  "name": "t-net-topo",
-  "version": "0.0.1",
+  "name": "@timmy/topo",
+  "version": "0.0.0-Alpha",
   "description": "This is a VUE based network topology.",
-  "keywords": "vue,topo,new-topo",
+  "keywords": "vue,topo,net-topo,topology",
   "author": "https://github.com/TimmyYagami/t-net-topo/blob/main/README.md",
-  "private": false,
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/TimmyYagami/t-net-topo/blob/main/README.md"

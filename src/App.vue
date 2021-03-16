@@ -1,16 +1,16 @@
 <template>
-  <graph :topoData="topoData" :showBar="showBar" :submenu="submenu" :size="size" />
+  <Topo :topoData="topoData" :showBar="showBar" :submenu="submenu" :size="size" />
 </template>
 
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import graph from '@/views/graph/index.vue';
-  import { DragBarSetting } from '@/types/DragBar';
+  // import graph from '@/views/graph/index.vue';
+  import Topo from '@/packges/index';
 
   export default defineComponent({
     name: 'App',
     components: {
-      graph,
+      Topo,
     },
     setup: () => {
       // 拖拽栏数据

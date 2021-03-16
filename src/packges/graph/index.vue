@@ -1,0 +1,196 @@
+<template>
+  <DragBar v-if="showBar" :dragBar="submenu" />
+  <div id="container" @dragover="dragoverHandler" @drop="dropHandler"></div>
+</template>
+
+<script lang="ts">
+  import { defineComponent, onMounted } from 'vue';
+  import G6 from '@antv/g6';
+  import DragBar from '@/components/DragBar/index.vue';
+
+  // 格式化props
+  import { basicProps } from './props';
+
+  import { buildUUID } from '@/utils/uuid';
+
+  // g6数据处理方法
+  import { useParseData } from '@/views/graph/hooks/useParseData';
+  import { useCreateMenu } from '@/views/graph/hooks/useCreateMenu';
+  import { useGetOptions } from '@/views/graph/hooks/useGetOptions';
+  import useRegister from '@/views/graph/hooks/useRegister';
+
+  export default defineComponent({
+    name: 'Index',
+    components: {
+      DragBar,
+    },
+    props: basicProps,
+    setup(props) {
+      // 容器
+      let container: HTMLElement | null;
+      // 画布实例
+      let graph;
+      // 拓扑数据映射，本质是一个对象
+      let mapTopo = new Map();
+
+      onMounted(() => {
+        container = document.getElementById('container');
+        getData();
+      });
+
+      /*
+       * G6事件
+       * */
+
+      // 获取数据
+      const getData = () => {
+        useParseData(props.submenu, mapTopo);
+        createGraph(props.topoData);
+      };
+      // 生成画布
+      const createGraph = (data) => {
+        useRegister(G6);
+        const { left, top } = container.getBoundingClientRect();
+
+        const contextMenu = new G6.Menu({
+          getContent(evt) {
+            const item = evt.item;
+            const type = item.getType() === 'node' ? '节点' : '连线';
+            return `
+              <p>删除${type}</p>
+              <p>删除${type}</p>
+            `;
+          },
+          handleMenuClick: (target, item) => {
+            graph.removeItem(item);
+          },
+          offsetX: -left + 20,
+          offsetY: -top + 20,
+          itemTypes: ['node', 'edge'],
+        });
+
+        const options = useGetOptions(container, props.size, [contextMenu]);
+        graph = new G6.Graph(options);
+
+        graph.data(data);
+        graph.render();
+
+        // 连线之前
+        graph.on('before-edge-add', (e, { source, target }) => {
+          const sId = source.getModel().id;
+          const tId = target.getModel().id;
+          const edges = source.getEdges();
+
+          let canLink = sId != tId;
+          //不能连接自己，不能连接两个已连接节点。
+          canLink = edges.length > 0 ? edges.some((l) => l.getModel().source !== tId) : canLink;
+          if (canLink) {
+            graph.addItem('edge', {
+              id: buildUUID(), // edge id
+              source: source,
+              target: target,
+            });
+          }
+        });
+        // 点击节点之后
+        graph.on('after-node-selected', (e) => {
+          const model = e.item.getModel();
+          console.log(model);
+        });
+
+        // 监听鼠标进入边事件
+        graph.on('edge:mouseenter', (evt) => {
+          const edge = evt.item;
+          // 激活该节点的 hover 状态
+          graph.setItemState(edge, 'hover', true);
+        });
+        // 监听鼠标离开边事件
+        graph.on('edge:mouseleave', (evt) => {
+          const edge = evt.item;
+          // 关闭该节点的 hover 状态
+          graph.setItemState(edge, 'hover', false);
+        });
+        // 监听边点击事件
+        graph.on('edge:click', (evt) => {
+          const edge = evt.item;
+          const source = edge.getSource();
+          const target = edge.getTarget();
+          clearSelected();
+          graph.setItemState(source, 'nodeState:selected', true);
+          graph.setItemState(target, 'nodeState:selected', true);
+        });
+        // 监听canvas点击事件
+        graph.on('canvas:click', clearSelected);
+      };
+
+      // 清除默认状态
+      const clearSelected = () => {
+        const selectedNodes = graph.findAllByState('node', 'nodeState:selected');
+        selectedNodes.forEach((node) => {
+          node.clearStates(['nodeState:selected', 'nodeState:hover']);
+        });
+      };
+
+      /*
+       * vue上的事件
+       * */
+
+      // 拖拽进入容器事件，不加此事件无法触发drop事件
+      const dragoverHandler = (e) => {
+        e.preventDefault();
+      };
+      // 在容器松开鼠标事件
+      const dropHandler = (e) => {
+        let type = e.dataTransfer.getData('type');
+        let fullName = mapTopo.get(type).name;
+        let { x, y } = graph.getPointByClient(e.x, e.y);
+        let model = {
+          id: buildUUID(),
+          style: '',
+          type: 'base-node',
+          img: mapTopo.get(type).icon,
+          fullName: fullName,
+          label: fullName.length > 8 ? fullName.slice(0, 8) + '...' : fullName,
+          x,
+          y,
+        };
+        let node = graph.addItem('node', model);
+        clearSelected();
+        graph.setItemState(node, 'nodeState:selected', true);
+      };
+      return {
+        dropHandler,
+        dragoverHandler,
+      };
+    },
+  });
+</script>
+
+<style lang="scss">
+  #container {
+    flex: 1;
+    position: relative;
+  }
+
+  .g6-tooltip {
+    border: 1px solid #e2e2e2;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #545454;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 10px 8px;
+    box-shadow: rgb(174, 174, 174) 0px 0px 10px;
+  }
+  .g6-component-contextmenu {
+    padding: 0;
+  }
+  .g6-component-contextmenu p {
+    padding: 10px;
+    cursor: pointer;
+    margin: 0;
+    text-align: center;
+  }
+  .g6-component-contextmenu p:hover {
+    background: #44d9ae;
+  }
+</style>
